@@ -5,18 +5,24 @@ jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Download source
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+      
+      - name: Download source from PsiphonOverMITM
         run: |
           curl -L https://github.com/B3hnamR/PsiphonOverMITM/archive/refs/heads/main.zip -o source.zip
           unzip source.zip
           mkdir -p FetchedSource
           cp -r PsiphonOverMITM-main/* FetchedSource/
           rm -rf PsiphonOverMITM-main source.zip
-      - name: Commit files
+          ls -la FetchedSource/
+      
+      - name: Push to repository
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
+          git config user.name "sms7182"
+          git config user.email "sms7182@users.noreply.github.com"
           git add FetchedSource/
-          git commit -m "Fetch source from PsiphonOverMITM" || echo "No changes"
-          git push
+          git commit -m "Add PsiphonOverMITM source" || echo "Nothing to commit"
+          git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/sms7182/ohmysource.git HEAD:main
