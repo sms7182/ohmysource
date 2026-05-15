@@ -9,20 +9,40 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT_TOKEN }}
-      
+
       - name: Download source from PsiphonOverMITM
         run: |
+          echo "Downloading source code..."
           curl -L https://github.com/B3hnamR/PsiphonOverMITM/archive/refs/heads/main.zip -o source.zip
-          unzip source.zip
+          echo "Extracting files..."
+          unzip -q source.zip
+          echo "Organizing files..."
           mkdir -p FetchedSource
-          cp -r PsiphonOverMITM-main/* FetchedSource/
+          # کپی کردن همه فایل‌ها و پوشه‌ها (از جمله فایل‌های پنهان)
+          cp -r PsiphonOverMITM-main/* FetchedSource/ 2>/dev/null || true
+          cp -r PsiphonOverMITM-main/.[!.]* FetchedSource/ 2>/dev/null || true
+          echo "Cleaning up temporary files..."
           rm -rf PsiphonOverMITM-main source.zip
+          echo "Listing fetched files:"
           ls -la FetchedSource/
-      
+
+      - name: Create ZIP archive for easy download
+        run: |
+          echo "Creating archive.zip from FetchedSource folder..."
+          zip -r myfile.zip FetchedSource/
+          echo "Archive created successfully."
+
+      - name: Upload archive as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: psiphon-source-archive
+          path: myfile.zip
+
       - name: Push to repository
         run: |
           git config user.name "sms7182"
           git config user.email "sms7182@users.noreply.github.com"
           git add FetchedSource/
-          git commit -m "Add PsiphonOverMITM source" || echo "Nothing to commit"
+          git add myfile.zip
+          git commit -m "Add PsiphonOverMITM source and its archive" || echo "Nothing to commit"
           git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/sms7182/ohmysource.git HEAD:main
